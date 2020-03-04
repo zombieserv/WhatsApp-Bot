@@ -1,0 +1,6 @@
+# Документация
+docs.docx
+/docs_images/*
+
+# Модули
+/node_modules/*

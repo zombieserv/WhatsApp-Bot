@@ -1,8 +1,8 @@
-const prequest = require('prequest');
 const config = require("./config.js");
 const token = config.token, apiUrl = config.apiUrl;
 const app = require('express')();
 const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
 app.use(bodyParser.json());
 
 process.on('unhandledRejection', err => {
@@ -13,14 +13,15 @@ app.get('/', function (req, res) {
     res.send("It's work.");
 }); 
 
-app.post('/get_messages', async function (req, res) {
+app.post('/webhook', async function (req, res) {
     const data = req.body;
     for (var i in data.messages) {
         const author = data.messages[i].author;
         const body = data.messages[i].body;
         const chatId = data.messages[i].chatId;
         const senderName = data.messages[i].senderName;
-
+        if(data.messages[i].fromMe)return;
+        
         if(/help/.test(body)){
             const text = `${senderName}, это демо-бот для https://chat-api.com/.
             Команды:
@@ -65,10 +66,13 @@ app.listen(80, function () {
 
 async function apiChatApi(method, params){
     const options = {};
-    options['json'] = params;
     options['method'] = "POST";
+    options['body'] = JSON.stringify(params);
+    options['headers'] = { 'Content-Type': 'application/json' };
     
-    const url = `${apiUrl}/${method}?token=${token}`;
-    const apiResponse = await prequest(url, options);
-    return apiResponse;
+    const url = `${apiUrl}/${method}?token=${token}`; 
+    
+    const apiResponse = await fetch(url, options);
+    const jsonResponse = await apiResponse.json();
+    return jsonResponse;
 }
